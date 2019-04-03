@@ -22,7 +22,14 @@ var GameMain = /** @class */ (function () {
             x: 75,
             y: 200,
             gap: 60,
-            loop: true
+            loop: false,
+            enableJump: true,
+            followCb: function (x) {
+                console.log(x);
+            },
+            animateUpdateCb: function (x) {
+                console.log(x);
+            }
         });
         Laya.stage.addChild(slide);
         // Laya.DebugPanel.init();

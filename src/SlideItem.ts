@@ -26,8 +26,12 @@ class SlideItem extends Laya.Sprite implements NSlideWidget.ISlideItem {
     }
 
     onPreEntry(): void {};
+    onCancelEntry(): void {};
     onEntry(): void {};
+
     onPreExit(): void {};
+    onCancelExit(): void {};
     onExit(): void {};
+
     onClick(): void {};
 }

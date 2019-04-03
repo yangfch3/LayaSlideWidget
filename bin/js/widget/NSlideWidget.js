@@ -142,24 +142,47 @@ var NSlideWidget;
             var touchEndX = e.stageX;
             var diffX = touchEndX - this.touchStartX;
             var distTime = Date.now() - this.touchStartTime;
+            console.log("distTime: " + distTime);
+            console.log("diffX: " + diffX);
             // 短距离滑动视为点击
-            if (Math.abs(diffX) < 6 && this.options.clickHandler) {
-                this.options.clickHandler(this.curIndex);
+            if (Math.abs(diffX) < 6 && this.options.clickCb) {
+                this.options.clickCb(this.curIndex);
             }
-            if (Math.abs(diffX / this.options.width) > this.options.swipeThreshold) {
-                diffX < 0 ? this.next() : this.prev();
+            if (Math.abs(diffX / this.options.width) <= this.options.swipeThreshold) {
+                this.springBack();
             }
             else {
-                var dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
-                // 直接缓动回弹
-                this.doAnimate(dist);
+                // 不循环且到了边界时
+                if (this.options.loop === false &&
+                    ((this.curIndex === 0 && diffX > 0) ||
+                        (this.curIndex === this.total - 1 && diffX < 0))) {
+                    this.springBack();
+                }
+                else {
+                    var speedMutli = Math.ceil((Math.abs(diffX) / distTime) / SlideWidget.INNER_CONFIG.averageSpeed);
+                    /**
+                     * 以下情况不允许跳跃：
+                     * 1. 不允许跳跃
+                     * 2. 没有到达超过跳跃速度的下限
+                     * 3. 循环开启
+                     */
+                    if (!this.options.enableJump || speedMutli <= 1 || this.options.loop) {
+                        return diffX < 0 ? this.next() : this.prev();
+                    }
+                    this.jump(diffX < 0 ? speedMutli : -speedMutli);
+                }
             }
+        };
+        SlideWidget.prototype.springBack = function () {
+            var dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
+            // 直接缓动回弹
+            this.doAnimate(dist);
         };
         /**
          * 跟手的处理
          */
         SlideWidget.prototype.followHandler = function () {
-            // TODO
+            this.options.followCb && this.options.followCb(this.slideContainer.x);
         };
         /**
          * 切换到上一个
@@ -180,20 +203,33 @@ var NSlideWidget;
          * @param jumpCount
          */
         SlideWidget.prototype.jump = function (jumpCount) {
-            // TODO
+            var leftRemainingCount = this.curIndex;
+            var rightRemainingCount = this.total - 1 - this.curIndex;
+            // 根据允许的最大跳跃数调整跳跃值
+            if (Math.abs(jumpCount) > SlideWidget.INNER_CONFIG.maxJumpCount) {
+                jumpCount = (jumpCount / Math.abs(jumpCount)) * SlideWidget.INNER_CONFIG.maxJumpCount;
+            }
+            if (jumpCount < 0) {
+                Math.abs(jumpCount) < leftRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(0);
+            }
+            else {
+                jumpCount < rightRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(this.total - 1);
+            }
         };
         SlideWidget.prototype.doMove = function (toIndex) {
+            var animateTime = Math.abs(toIndex - this.curIndex) * this.options.pageTurnTime;
             this.curIndex = toIndex;
             var dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
-            this.doAnimate(dist);
+            this.doAnimate(dist, animateTime);
         };
-        SlideWidget.prototype.doAnimate = function (dist) {
+        SlideWidget.prototype.doAnimate = function (dist, time) {
             var _this = this;
+            if (time === void 0) { time = this.options.pageTurnTime; }
             this.isAnimating = true;
             this.tween.complete();
             this.tween.to(this.slideContainer, {
                 x: -dist
-            }, this.options.pageTurnTime, Laya.Ease.sineIn, Laya.Handler.create(this, function () {
+            }, time, Laya.Ease.quadOut, Laya.Handler.create(this, function () {
                 _this.isAnimating = false;
                 // 无限循环时对到达了边界时的处理
                 if (_this.options.loop) {
@@ -207,6 +243,12 @@ var NSlideWidget;
                     }
                 }
             }));
+            this.options.animateUpdateCb && (this.tween.update = new Laya.Handler(this, function () {
+                this.options.animateUpdateCb(this.slideContainer.x);
+            }));
+        };
+        SlideWidget.prototype.getItemPosByIndex = function (index) {
+            return index * this.options.width + (index + 1) * this.options.gap;
         };
         SlideWidget.prototype.dispose = function () {
             this.unbindEvents();
@@ -218,13 +260,20 @@ var NSlideWidget;
             width: 750,
             height: 1334,
             loop: true,
+            enableJump: false,
             x: 0,
             y: 0,
             gap: 0,
             pageTurnTime: 300,
-            delay: 4000,
             swipeThreshold: 0.3,
-            clickHandler: null
+            clickCb: null,
+            followCb: null,
+            animateUpdateCb: null
+        };
+        SlideWidget.INNER_CONFIG = {
+            // px/ms
+            averageSpeed: 4,
+            maxJumpCount: 2
         };
         return SlideWidget;
     }(Laya.Sprite));

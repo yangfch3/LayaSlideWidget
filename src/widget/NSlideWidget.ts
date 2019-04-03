@@ -5,18 +5,20 @@ namespace NSlideWidget {
         height?: number
 
         loop?: boolean
+        enableJump?: boolean
 
         x?: number
         y?: number
         gap?: number
 
         pageTurnTime?: number
-        delay?: number
 
         // swipe 阈值，0-1，在阈值内会回弹，不切换
         swipeThreshold?: number
 
-        clickHandler?: (index: number) => void
+        clickCb?: (index: number) => void
+        followCb?: (x: number) => void
+        animateUpdateCb?: (x: number) => void
     }
 
     export class SlideWidget extends Laya.Sprite {
@@ -25,13 +27,21 @@ namespace NSlideWidget {
             width: 750,
             height: 1334,
             loop: true,
+            enableJump: false,
             x: 0,
             y: 0,
             gap: 0,
             pageTurnTime: 300,
-            delay: 4000,
             swipeThreshold: 0.3,
-            clickHandler: null
+            clickCb: null,
+            followCb: null,
+            animateUpdateCb: null
+        }
+
+        public static INNER_CONFIG = {
+            // px/ms
+            averageSpeed: 4,
+            maxJumpCount: 2
         }
 
         private options: SlideOptions;
@@ -65,6 +75,7 @@ namespace NSlideWidget {
             this.options = options ? { ...SlideWidget.DEFAULT_OPTIONS, ...options } : SlideWidget.DEFAULT_OPTIONS;
             this.data = data;
             this.tween = new Laya.Tween();
+
             this.initView();
             this.initLogic();
         }
@@ -94,7 +105,7 @@ namespace NSlideWidget {
             this.total = this.data.length;
 
             this.slideContainer.width = this.options.width * this.total;
-            
+
             this.createSlideItems();
             this.bindEvents();
 
@@ -159,6 +170,7 @@ namespace NSlideWidget {
                 return;
             }
             this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap) + diffX;
+            
             // 跟手处理（例如切换时有一个 scale 的变化过程）
             this.followHandler();
         }
@@ -174,25 +186,49 @@ namespace NSlideWidget {
             const diffX = touchEndX - this.touchStartX;
             const distTime = Date.now() - this.touchStartTime;
 
+            console.log(`distTime: ${distTime}`);
+            console.log(`diffX: ${diffX}`);
+
             // 短距离滑动视为点击
-            if (Math.abs(diffX) < 6 && this.options.clickHandler) {
-                this.options.clickHandler(this.curIndex);
+            if (Math.abs(diffX) < 6 && this.options.clickCb) {
+                this.options.clickCb(this.curIndex);
             }
 
-            if (Math.abs(diffX / this.options.width) > this.options.swipeThreshold) {
-                diffX < 0 ? this.next() : this.prev()
+            if (Math.abs(diffX / this.options.width) <= this.options.swipeThreshold) {
+                this.springBack();
             } else {
-                let dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
-                // 直接缓动回弹
-                this.doAnimate(dist);
+                // 不循环且到了边界时
+                if (this.options.loop === false &&
+                    ((this.curIndex === 0 && diffX > 0) ||
+                        (this.curIndex === this.total - 1 && diffX < 0))) {
+                    this.springBack();
+                } else {
+                    const speedMutli = Math.ceil((Math.abs(diffX) / distTime) / SlideWidget.INNER_CONFIG.averageSpeed);
+                    /**
+                     * 以下情况不允许跳跃：
+                     * 1. 不允许跳跃
+                     * 2. 没有到达超过跳跃速度的下限
+                     * 3. 循环开启
+                     */
+                    if (!this.options.enableJump || speedMutli <= 1 || this.options.loop) {
+                        return diffX < 0 ? this.next() : this.prev();
+                    }
+                    this.jump(diffX < 0 ? speedMutli : -speedMutli);
+                }
             }
+        }
+
+        private springBack() {
+            let dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
+            // 直接缓动回弹
+            this.doAnimate(dist);
         }
 
         /**
          * 跟手的处理
          */
         private followHandler() {
-            // TODO
+            this.options.followCb && this.options.followCb(this.slideContainer.x);
         }
 
         /**
@@ -216,21 +252,32 @@ namespace NSlideWidget {
          * @param jumpCount
          */
         private jump(jumpCount: number) {
-            // TODO
+            const leftRemainingCount = this.curIndex;
+            const rightRemainingCount = this.total - 1 - this.curIndex;
+            // 根据允许的最大跳跃数调整跳跃值
+            if (Math.abs(jumpCount) > SlideWidget.INNER_CONFIG.maxJumpCount) {
+                jumpCount = (jumpCount / Math.abs(jumpCount)) * SlideWidget.INNER_CONFIG.maxJumpCount
+            }
+            if (jumpCount < 0) {
+                Math.abs(jumpCount) < leftRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(0);
+            } else {
+                jumpCount < rightRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(this.total - 1);
+            }
         }
 
         private doMove(toIndex: number) {
+            const animateTime = Math.abs(toIndex - this.curIndex) * this.options.pageTurnTime;
             this.curIndex = toIndex;
             const dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
-            this.doAnimate(dist);
+            this.doAnimate(dist, animateTime);
         }
 
-        private doAnimate(dist: number) {
+        private doAnimate(dist: number, time: number = this.options.pageTurnTime) {
             this.isAnimating = true;
             this.tween.complete();
             this.tween.to(this.slideContainer, {
                 x: -dist
-            }, this.options.pageTurnTime, Laya.Ease.sineIn, Laya.Handler.create(this, () => {
+            }, time, Laya.Ease.quadOut, Laya.Handler.create(this, () => {
                 this.isAnimating = false;
                 // 无限循环时对到达了边界时的处理
                 if (this.options.loop) {
@@ -242,7 +289,14 @@ namespace NSlideWidget {
                         this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap);
                     }
                 }
-            }))
+            }));
+            this.options.animateUpdateCb && (this.tween.update = new Laya.Handler(this, function() {
+                this.options.animateUpdateCb(this.slideContainer.x);
+            }));
+        }
+
+        getItemPosByIndex(index: number) {
+            return index * this.options.width + (index + 1) * this.options.gap
         }
 
         public dispose() {

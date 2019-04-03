@@ -34,9 +34,13 @@ var SlideItem = /** @class */ (function (_super) {
     };
     SlideItem.prototype.onPreEntry = function () { };
     ;
+    SlideItem.prototype.onCancelEntry = function () { };
+    ;
     SlideItem.prototype.onEntry = function () { };
     ;
     SlideItem.prototype.onPreExit = function () { };
+    ;
+    SlideItem.prototype.onCancelExit = function () { };
     ;
     SlideItem.prototype.onExit = function () { };
     ;
