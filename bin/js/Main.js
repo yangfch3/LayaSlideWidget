@@ -35,49 +35,54 @@ var GameMain = /** @class */ (function () {
                  * ...
                  */
                 if (-x < -perceptualArea) {
-                    context.getSlideItemByIndex(0).alpha = 1;
+                    context.getSlideItemByIndex(0).textField.scale(1, 1);
                     return;
                 }
                 var curOn = Math.floor((-x + perceptualArea) / (600 + 60));
                 var perceptualLeftX = curOn * (600 + 60) - perceptualArea;
                 var perceptualRightX = curOn * (600 + 60) + perceptualArea;
+                var perceptualMiddleX = curOn * (600 + 60);
                 if (-x >= perceptualLeftX && -x <= perceptualRightX) {
-                    context.getSlideItemByIndex(curOn).alpha = 0.5;
+                    var scaleRatio = 1 - Math.abs(-x - perceptualMiddleX) / perceptualArea;
+                    context.getSlideItemByIndex(curOn).textField.scale(1 + scaleRatio, 1 + scaleRatio);
                 }
                 else {
-                    context.getSlideItemByIndex(curOn).alpha = 1;
+                    context.getSlideItemByIndex(curOn).textField.scale(1, 1);
                     if (curOn + 1 <= context.total - 1) {
-                        context.getSlideItemByIndex(curOn + 1).alpha = 1;
+                        context.getSlideItemByIndex(curOn + 1).textField.scale(1, 1);
                     }
                 }
             },
             animateUpdateCb: function (context, x) {
                 /**
                  * -x
-                 * -∞, -30 中间阶段确保 0 的状态重置
-                 * [-30, 30] 改变 0 的大小
-                 * 30, 630 中间阶段确保 0, 1 的状态重置
-                 * [630, 690] 改变 1 的大小
+                 * -∞, -80 中间阶段确保 0 的状态重置
+                 * [-80, 80] 改变 0 的大小
+                 * 80, 580 中间阶段确保 0, 1 的状态重置
+                 * [580, 720] 改变 1 的大小
                  * ...
                  */
                 if (-x < -perceptualArea) {
-                    context.getSlideItemByIndex(0).alpha = 1;
+                    context.getSlideItemByIndex(0).textField.scale(1, 1);
                     return;
                 }
                 var curOn = Math.floor((-x + perceptualArea) / (600 + 60));
                 var perceptualLeftX = curOn * (600 + 60) - perceptualArea;
                 var perceptualRightX = curOn * (600 + 60) + perceptualArea;
+                var perceptualMiddleX = curOn * (600 + 60);
                 if (-x >= perceptualLeftX && -x <= perceptualRightX) {
-                    context.getSlideItemByIndex(curOn).alpha = 0.5;
+                    var scaleRatio = 1 - Math.abs(-x - perceptualMiddleX) / perceptualArea;
+                    context.getSlideItemByIndex(curOn).textField.scale(1 + scaleRatio, 1 + scaleRatio);
                 }
                 else {
-                    context.getSlideItemByIndex(curOn).alpha = 1;
+                    context.getSlideItemByIndex(curOn).textField.scale(1, 1);
                     if (curOn + 1 <= context.total - 1) {
-                        context.getSlideItemByIndex(curOn + 1).alpha = 1;
+                        context.getSlideItemByIndex(curOn + 1).textField.scale(1, 1);
                     }
                 }
             }
         });
+        slide1.getSlideItemByIndex(0).textField.scale(2, 2);
         Laya['slideWidget'] = slide1;
         Laya.stage.addChild(slide1);
         var slide2 = new NSlideWidget.SlideWidget(data, SlideItem, {

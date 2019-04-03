@@ -1,5 +1,5 @@
 class SlideItem extends Laya.Sprite implements NSlideWidget.ISlideItem {
-    private textField: Laya.Text
+    public textField: Laya.Text
 
     constructor() {
         super();
@@ -13,6 +13,8 @@ class SlideItem extends Laya.Sprite implements NSlideWidget.ISlideItem {
         text.fontSize = 20;
         text.width = this.width;
         text.height = this.height;
+        text.pivot(this.width / 2, this.height / 2);
+        text.pos(this.width / 2, this.height / 2);
         text.align = 'center';
         text.valign = 'middle';
 

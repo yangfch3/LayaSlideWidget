@@ -24,6 +24,8 @@ var SlideItem = /** @class */ (function (_super) {
         text.fontSize = 20;
         text.width = _this.width;
         text.height = _this.height;
+        text.pivot(_this.width / 2, _this.height / 2);
+        text.pos(_this.width / 2, _this.height / 2);
         text.align = 'center';
         text.valign = 'middle';
         _this.addChild(text);
