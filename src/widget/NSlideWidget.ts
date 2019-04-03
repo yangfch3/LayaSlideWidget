@@ -110,7 +110,7 @@ namespace NSlideWidget {
             this.bindEvents();
 
             // loop 时初始的 curIndex 不为 0，要重设容器 x
-            this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap);
+            this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap);
         }
 
         private createSlideItems() {
@@ -118,7 +118,7 @@ namespace NSlideWidget {
                 let slideItem = new this.slideItemContr();
                 slideItem.setData(this.data[index])
                 slideItem.size(this.options.width, this.options.height);
-                slideItem.pos(index * this.options.width + (index + 1) * this.options.gap, 0);
+                slideItem.pos(index * this.options.width + index * this.options.gap, 0);
                 this.slideContainer.addChild(slideItem);
             })
         }
@@ -169,7 +169,7 @@ namespace NSlideWidget {
                 (diffX < diffY && diffX > -diffY)) {
                 return;
             }
-            this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap) + diffX;
+            this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap) + diffX;
             
             // 跟手处理（例如切换时有一个 scale 的变化过程）
             this.followHandler();
@@ -219,7 +219,7 @@ namespace NSlideWidget {
         }
 
         private springBack() {
-            let dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
+            let dist = this.curIndex * this.options.width + this.curIndex * this.options.gap;
             // 直接缓动回弹
             this.doAnimate(dist);
         }
@@ -268,7 +268,7 @@ namespace NSlideWidget {
         private doMove(toIndex: number) {
             const animateTime = Math.abs(toIndex - this.curIndex) * this.options.pageTurnTime;
             this.curIndex = toIndex;
-            const dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
+            const dist = this.curIndex * this.options.width + this.curIndex * this.options.gap;
             this.doAnimate(dist, animateTime);
         }
 
@@ -283,10 +283,10 @@ namespace NSlideWidget {
                 if (this.options.loop) {
                     if (this.curIndex === 0) {
                         this.curIndex = this.total - 1 - 1;
-                        this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap);
+                        this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap);
                     } else if (this.curIndex === this.total - 1) {
                         this.curIndex = 1;
-                        this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap);
+                        this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap);
                     }
                 }
             }));

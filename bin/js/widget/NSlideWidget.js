@@ -75,7 +75,7 @@ var NSlideWidget;
             this.createSlideItems();
             this.bindEvents();
             // loop 时初始的 curIndex 不为 0，要重设容器 x
-            this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap);
+            this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap);
         };
         SlideWidget.prototype.createSlideItems = function () {
             var _this = this;
@@ -83,7 +83,7 @@ var NSlideWidget;
                 var slideItem = new _this.slideItemContr();
                 slideItem.setData(_this.data[index]);
                 slideItem.size(_this.options.width, _this.options.height);
-                slideItem.pos(index * _this.options.width + (index + 1) * _this.options.gap, 0);
+                slideItem.pos(index * _this.options.width + index * _this.options.gap, 0);
                 _this.slideContainer.addChild(slideItem);
             });
         };
@@ -129,7 +129,7 @@ var NSlideWidget;
                 (diffX < diffY && diffX > -diffY)) {
                 return;
             }
-            this.slideContainer.x = -(this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap) + diffX;
+            this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap) + diffX;
             // 跟手处理（例如切换时有一个 scale 的变化过程）
             this.followHandler();
         };
@@ -174,7 +174,7 @@ var NSlideWidget;
             }
         };
         SlideWidget.prototype.springBack = function () {
-            var dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
+            var dist = this.curIndex * this.options.width + this.curIndex * this.options.gap;
             // 直接缓动回弹
             this.doAnimate(dist);
         };
@@ -219,7 +219,7 @@ var NSlideWidget;
         SlideWidget.prototype.doMove = function (toIndex) {
             var animateTime = Math.abs(toIndex - this.curIndex) * this.options.pageTurnTime;
             this.curIndex = toIndex;
-            var dist = this.curIndex * this.options.width + (this.curIndex + 1) * this.options.gap;
+            var dist = this.curIndex * this.options.width + this.curIndex * this.options.gap;
             this.doAnimate(dist, animateTime);
         };
         SlideWidget.prototype.doAnimate = function (dist, time) {
@@ -235,11 +235,11 @@ var NSlideWidget;
                 if (_this.options.loop) {
                     if (_this.curIndex === 0) {
                         _this.curIndex = _this.total - 1 - 1;
-                        _this.slideContainer.x = -(_this.curIndex * _this.options.width + (_this.curIndex + 1) * _this.options.gap);
+                        _this.slideContainer.x = -(_this.curIndex * _this.options.width + _this.curIndex * _this.options.gap);
                     }
                     else if (_this.curIndex === _this.total - 1) {
                         _this.curIndex = 1;
-                        _this.slideContainer.x = -(_this.curIndex * _this.options.width + (_this.curIndex + 1) * _this.options.gap);
+                        _this.slideContainer.x = -(_this.curIndex * _this.options.width + _this.curIndex * _this.options.gap);
                     }
                 }
             }));

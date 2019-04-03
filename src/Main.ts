@@ -25,7 +25,7 @@ class GameMain {
             x: 75,
             y: 200,
             gap: 60,
-            loop: false,
+            loop: true,
             enableJump: true,
             followCb: function(x) {
                 console.log(x)
