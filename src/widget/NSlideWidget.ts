@@ -16,9 +16,9 @@ namespace NSlideWidget {
         // swipe 阈值，0-1，在阈值内会回弹，不切换
         swipeThreshold?: number
 
-        clickCb?: (index: number) => void
-        followCb?: (x: number) => void
-        animateUpdateCb?: (x: number) => void
+        clickCb?: (context: SlideWidget, index: number) => void
+        followCb?: (context: SlideWidget, x: number) => void
+        animateUpdateCb?: (context: SlideWidget, x: number) => void
     }
 
     export class SlideWidget extends Laya.Sprite {
@@ -26,7 +26,7 @@ namespace NSlideWidget {
             container: Laya.stage,
             width: 750,
             height: 1334,
-            loop: true,
+            loop: false,
             enableJump: false,
             x: 0,
             y: 0,
@@ -54,7 +54,7 @@ namespace NSlideWidget {
         private touchStartY: number = 0;
         private touchStartTime: number = null;
 
-        private total: number = 0;
+        public total: number = 0;
         private curIndex: number = 0;
         // 跟手动画时预测下一个索引
         private preIndex: number = null;
@@ -66,7 +66,6 @@ namespace NSlideWidget {
 
         constructor(data: any[], slideItemContr: ISlideItemConstructor, options?: SlideOptions) {
             super();
-            Laya['slideWidget'] = this;
             if (data.length === 0) {
                 console.error('Slide 数据项为空');
                 return this;
@@ -186,12 +185,9 @@ namespace NSlideWidget {
             const diffX = touchEndX - this.touchStartX;
             const distTime = Date.now() - this.touchStartTime;
 
-            console.log(`distTime: ${distTime}`);
-            console.log(`diffX: ${diffX}`);
-
             // 短距离滑动视为点击
             if (Math.abs(diffX) < 6 && this.options.clickCb) {
-                this.options.clickCb(this.curIndex);
+                this.options.clickCb(this, this.curIndex);
             }
 
             if (Math.abs(diffX / this.options.width) <= this.options.swipeThreshold) {
@@ -228,7 +224,7 @@ namespace NSlideWidget {
          * 跟手的处理
          */
         private followHandler() {
-            this.options.followCb && this.options.followCb(this.slideContainer.x);
+            this.options.followCb && this.options.followCb(this, this.slideContainer.x);
         }
 
         /**
@@ -290,13 +286,13 @@ namespace NSlideWidget {
                     }
                 }
             }));
-            this.options.animateUpdateCb && (this.tween.update = new Laya.Handler(this, function() {
-                this.options.animateUpdateCb(this.slideContainer.x);
+            this.options.animateUpdateCb && (this.tween.update = new Laya.Handler(this, function(this: SlideWidget) {
+                this.options.animateUpdateCb(this, this.slideContainer.x);
             }));
         }
 
-        getItemPosByIndex(index: number) {
-            return index * this.options.width + (index + 1) * this.options.gap
+        getSlideItemByIndex(index): SlideItem {
+            return this.slideContainer.getChildAt(index) as SlideItem
         }
 
         public dispose() {

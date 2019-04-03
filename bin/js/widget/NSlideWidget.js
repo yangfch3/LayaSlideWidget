@@ -38,7 +38,6 @@ var NSlideWidget;
             _this.tween = new Laya.Tween();
             _this.isAnimating = false;
             _this.isTouching = false;
-            Laya['slideWidget'] = _this;
             if (data.length === 0) {
                 console.error('Slide 数据项为空');
                 return _this;
@@ -142,11 +141,9 @@ var NSlideWidget;
             var touchEndX = e.stageX;
             var diffX = touchEndX - this.touchStartX;
             var distTime = Date.now() - this.touchStartTime;
-            console.log("distTime: " + distTime);
-            console.log("diffX: " + diffX);
             // 短距离滑动视为点击
             if (Math.abs(diffX) < 6 && this.options.clickCb) {
-                this.options.clickCb(this.curIndex);
+                this.options.clickCb(this, this.curIndex);
             }
             if (Math.abs(diffX / this.options.width) <= this.options.swipeThreshold) {
                 this.springBack();
@@ -182,7 +179,7 @@ var NSlideWidget;
          * 跟手的处理
          */
         SlideWidget.prototype.followHandler = function () {
-            this.options.followCb && this.options.followCb(this.slideContainer.x);
+            this.options.followCb && this.options.followCb(this, this.slideContainer.x);
         };
         /**
          * 切换到上一个
@@ -244,11 +241,11 @@ var NSlideWidget;
                 }
             }));
             this.options.animateUpdateCb && (this.tween.update = new Laya.Handler(this, function () {
-                this.options.animateUpdateCb(this.slideContainer.x);
+                this.options.animateUpdateCb(this, this.slideContainer.x);
             }));
         };
-        SlideWidget.prototype.getItemPosByIndex = function (index) {
-            return index * this.options.width + (index + 1) * this.options.gap;
+        SlideWidget.prototype.getSlideItemByIndex = function (index) {
+            return this.slideContainer.getChildAt(index);
         };
         SlideWidget.prototype.dispose = function () {
             this.unbindEvents();
@@ -259,7 +256,7 @@ var NSlideWidget;
             container: Laya.stage,
             width: 750,
             height: 1334,
-            loop: true,
+            loop: false,
             enableJump: false,
             x: 0,
             y: 0,

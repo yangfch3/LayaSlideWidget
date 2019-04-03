@@ -19,22 +19,80 @@ class GameMain {
                 txt: 'Slide Item 3'
             }
         ];
-        let slide: NSlideWidget.SlideWidget = new NSlideWidget.SlideWidget(data, SlideItem, {
+
+        // 感知区域范围
+        let perceptualArea = 80;
+        let slide1: NSlideWidget.SlideWidget = new NSlideWidget.SlideWidget(data, SlideItem, {
             width: 600,
             height: 400,
             x: 75,
             y: 200,
             gap: 60,
-            loop: true,
             enableJump: true,
-            followCb: function(x) {
-                console.log(x)
+            followCb: function (context, x) {
+                /**
+                 * -x
+                 * -∞, -80 中间阶段确保 0 的状态重置
+                 * [-80, 80] 改变 0 的大小
+                 * 80, 580 中间阶段确保 0, 1 的状态重置
+                 * [580, 720] 改变 1 的大小
+                 * ...
+                 */
+                if (-x < -perceptualArea) {
+                    context.getSlideItemByIndex(0).alpha = 1
+                    return
+                }
+                const curOn = Math.floor((-x + perceptualArea) / (600 + 60))
+                const perceptualLeftX = curOn * (600 + 60) - perceptualArea
+                const perceptualRightX = curOn * (600 + 60) + perceptualArea
+                if (-x >= perceptualLeftX && -x <= perceptualRightX) {
+                    context.getSlideItemByIndex(curOn).alpha = 0.5
+                } else {
+                    context.getSlideItemByIndex(curOn).alpha = 1
+                    if (curOn + 1 <= context.total - 1) {
+                        context.getSlideItemByIndex(curOn + 1).alpha = 1
+                    }
+                }
             },
-            animateUpdateCb: function(x) {
-                console.log(x)
+            animateUpdateCb: function (context, x) {
+                /**
+                 * -x
+                 * -∞, -30 中间阶段确保 0 的状态重置
+                 * [-30, 30] 改变 0 的大小
+                 * 30, 630 中间阶段确保 0, 1 的状态重置
+                 * [630, 690] 改变 1 的大小
+                 * ...
+                 */
+                if (-x < -perceptualArea) {
+                    context.getSlideItemByIndex(0).alpha = 1
+                    return
+                }
+                const curOn = Math.floor((-x + perceptualArea) / (600 + 60))
+                const perceptualLeftX = curOn * (600 + 60) - perceptualArea
+                const perceptualRightX = curOn * (600 + 60) + perceptualArea
+                if (-x >= perceptualLeftX && -x <= perceptualRightX) {
+                    context.getSlideItemByIndex(curOn).alpha = 0.5
+                } else {
+                    context.getSlideItemByIndex(curOn).alpha = 1
+                    if (curOn + 1 <= context.total - 1) {
+                        context.getSlideItemByIndex(curOn + 1).alpha = 1
+                    }
+                }
             }
         });
-        Laya.stage.addChild(slide);
+        Laya['slideWidget'] = slide1;
+        Laya.stage.addChild(slide1);
+
+        let slide2: NSlideWidget.SlideWidget = new NSlideWidget.SlideWidget(data, SlideItem, {
+            width: 600,
+            height: 400,
+            x: 75,
+            y: 700,
+            gap: 60,
+            loop: true
+        });
+        Laya.stage.addChild(slide2);
+
         // Laya.DebugPanel.init();
     }
 }
