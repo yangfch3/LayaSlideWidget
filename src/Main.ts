@@ -39,7 +39,7 @@ class GameMain {
                  * ...
                  */
                 if (-x < -perceptualArea) {
-                    context.getSlideItemByIndex(0).textField.scale(1, 1)
+                    (context.getSlideItemByIndex(0) as SlideItem).textField.scale(1, 1)
                     return
                 }
                 const curOn = Math.floor((-x + perceptualArea) / (600 + 60))
@@ -47,12 +47,12 @@ class GameMain {
                 const perceptualRightX = curOn * (600 + 60) + perceptualArea
                 const perceptualMiddleX = curOn * (600 + 60)
                 if (-x >= perceptualLeftX && -x <= perceptualRightX) {
-                    const scaleRatio = 1 - Math.abs(-x - perceptualMiddleX) / perceptualArea
-                    context.getSlideItemByIndex(curOn).textField.scale(1 + scaleRatio, 1 + scaleRatio)
+                    const scaleRatio = 1 - Math.abs(-x - perceptualMiddleX) / perceptualArea;
+                    (context.getSlideItemByIndex(curOn) as SlideItem).textField.scale(1 + scaleRatio, 1 + scaleRatio)
                 } else {
-                    context.getSlideItemByIndex(curOn).textField.scale(1, 1)
+                    (context.getSlideItemByIndex(curOn) as SlideItem).textField.scale(1, 1)
                     if (curOn + 1 <= context.total - 1) {
-                        context.getSlideItemByIndex(curOn + 1).textField.scale(1, 1)
+                        (context.getSlideItemByIndex(curOn + 1) as SlideItem).textField.scale(1, 1)
                     }
                 }
             },
@@ -66,7 +66,7 @@ class GameMain {
                  * ...
                  */
                 if (-x < -perceptualArea) {
-                    context.getSlideItemByIndex(0).textField.scale(1, 1)
+                    (context.getSlideItemByIndex(0) as SlideItem).textField.scale(1, 1)
                     return
                 }
                 const curOn = Math.floor((-x + perceptualArea) / (600 + 60))
@@ -74,17 +74,17 @@ class GameMain {
                 const perceptualRightX = curOn * (600 + 60) + perceptualArea
                 const perceptualMiddleX = curOn * (600 + 60)
                 if (-x >= perceptualLeftX && -x <= perceptualRightX) {
-                    const scaleRatio = 1 - Math.abs(-x - perceptualMiddleX) / perceptualArea
-                    context.getSlideItemByIndex(curOn).textField.scale(1 + scaleRatio, 1 + scaleRatio)
+                    const scaleRatio = 1 - Math.abs(-x - perceptualMiddleX) / perceptualArea;
+                    (context.getSlideItemByIndex(curOn) as SlideItem).textField.scale(1 + scaleRatio, 1 + scaleRatio)
                 } else {
-                    context.getSlideItemByIndex(curOn).textField.scale(1, 1)
+                    (context.getSlideItemByIndex(curOn) as SlideItem).textField.scale(1, 1)
                     if (curOn + 1 <= context.total - 1) {
-                        context.getSlideItemByIndex(curOn + 1).textField.scale(1, 1)
+                        (context.getSlideItemByIndex(curOn + 1) as SlideItem).textField.scale(1, 1)
                     }
                 }
             }
         });
-        slide1.getSlideItemByIndex(0).textField.scale(2, 2)
+        (slide1.getSlideItemByIndex(0) as SlideItem).textField.scale(2, 2)
         Laya['slideWidget'] = slide1;
         Laya.stage.addChild(slide1);
 

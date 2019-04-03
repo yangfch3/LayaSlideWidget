@@ -291,8 +291,8 @@ namespace NSlideWidget {
             }));
         }
 
-        getSlideItemByIndex(index): SlideItem {
-            return this.slideContainer.getChildAt(index) as SlideItem
+        getSlideItemByIndex(index): ISlideItem {
+            return this.slideContainer.getChildAt(index) as ISlideItem
         }
 
         public dispose() {
