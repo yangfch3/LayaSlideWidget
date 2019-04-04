@@ -46,6 +46,7 @@ namespace NSlideWidget {
 
         private options: SlideOptions;
         private data: any[];
+        private args: any;
         private slideItemContr: ISlideItemConstructor;
 
         private slideContainer: Laya.Sprite;
@@ -61,10 +62,11 @@ namespace NSlideWidget {
 
         private tween: Laya.Tween = new Laya.Tween();
 
-        private isAnimating: boolean = false;
-        private isTouching: boolean = false;
+        public isAnimating: boolean = false;
+        public isTouching: boolean = false;
+        public isTouchMove: boolean = false;
 
-        constructor(data: any[], slideItemContr: ISlideItemConstructor, options?: SlideOptions) {
+        constructor(data: any[], slideItemContr: ISlideItemConstructor, options?: SlideOptions, args?: any) {
             super();
             if (data.length === 0) {
                 console.error('Slide 数据项为空');
@@ -73,6 +75,7 @@ namespace NSlideWidget {
             this.slideItemContr = slideItemContr;
             this.options = options ? { ...SlideWidget.DEFAULT_OPTIONS, ...options } : SlideWidget.DEFAULT_OPTIONS;
             this.data = data;
+            this.args = args;
             this.tween = new Laya.Tween();
 
             this.initView();
@@ -113,11 +116,12 @@ namespace NSlideWidget {
         }
 
         private createSlideItems() {
+            let self = this
             this.data.forEach((data, index) => {
-                let slideItem = new this.slideItemContr();
-                slideItem.setData(this.data[index])
-                slideItem.size(this.options.width, this.options.height);
-                slideItem.pos(index * this.options.width + index * this.options.gap, 0);
+                let slideItem = new this.slideItemContr(self);
+                slideItem.setData(self.data[index], self.args)
+                slideItem.size(self.options.width, self.options.height);
+                slideItem.pos(index * self.options.width + index * self.options.gap, 0);
                 this.slideContainer.addChild(slideItem);
             })
         }
@@ -168,6 +172,10 @@ namespace NSlideWidget {
                 (diffX < diffY && diffX > -diffY)) {
                 return;
             }
+            // 位移超过 6 视为滑动
+            if (Math.abs(diffX) >= 6) {
+                this.isTouchMove = true
+            }
             this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap) + diffX;
             
             // 跟手处理（例如切换时有一个 scale 的变化过程）
@@ -185,10 +193,15 @@ namespace NSlideWidget {
             const diffX = touchEndX - this.touchStartX;
             const distTime = Date.now() - this.touchStartTime;
 
-            // 短距离滑动视为点击
-            if (Math.abs(diffX) < 6 && this.options.clickCb) {
-                this.options.clickCb(this, this.curIndex);
+            // 滑动位没有被改变时直接触发点击回调
+            if (!this.isTouchMove) {
+                this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap);
+                if (this.options.clickCb) {
+                    this.options.clickCb(this, this.curIndex);
+                }
+                return
             }
+            this.isTouchMove = false;
 
             if (Math.abs(diffX / this.options.width) <= this.options.swipeThreshold) {
                 this.springBack();

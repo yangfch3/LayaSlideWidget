@@ -1,9 +1,11 @@
 namespace NSlideWidget {
     export interface ISlideItemConstructor {
-        new (): ISlideItem;
+        new (slideWidget: NSlideWidget.SlideWidget): ISlideItem
     }
     export interface ISlideItem extends Laya.Sprite {
-        setData(data: any): void;
+        slideWidget: NSlideWidget.SlideWidget
+
+        setData(data: any, args?: any): void;
 
         onClick(): void;
     }

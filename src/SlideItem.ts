@@ -1,8 +1,11 @@
 class SlideItem extends Laya.Sprite implements NSlideWidget.ISlideItem {
+    public slideWidget: NSlideWidget.SlideWidget
+
     public textField: Laya.Text
 
-    constructor() {
+    constructor(slideWidget: NSlideWidget.SlideWidget) {
         super();
+        this.slideWidget = slideWidget;
         this.width = 600;
         this.height = 400;
         this.graphics.drawRect(0, 0, 600, 400, '#ffffff', '#000000');

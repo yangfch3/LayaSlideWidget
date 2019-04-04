@@ -13,8 +13,9 @@ var __extends = (this && this.__extends) || (function () {
 })();
 var SlideItem = /** @class */ (function (_super) {
     __extends(SlideItem, _super);
-    function SlideItem() {
+    function SlideItem(slideWidget) {
         var _this = _super.call(this) || this;
+        _this.slideWidget = slideWidget;
         _this.width = 600;
         _this.height = 400;
         _this.graphics.drawRect(0, 0, 600, 400, '#ffffff', '#000000');
