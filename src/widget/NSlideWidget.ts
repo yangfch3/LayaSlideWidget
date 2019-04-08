@@ -32,15 +32,18 @@ namespace NSlideWidget {
             y: 0,
             gap: 0,
             pageTurnTime: 300,
-            swipeThreshold: 0.3,
+            swipeThreshold: 0.3, // 滑动距离超过 SlideItem 的 30% 才会触发切换
             clickCb: null,
             followCb: null,
             animateUpdateCb: null
         }
 
         public static INNER_CONFIG = {
-            // px/ms
-            averageSpeed: 4,
+            /**
+             * 滑动单张的速度均值：像素/毫秒
+             * 单次滑动的张数 = Math.floor(v / averageSpeed)
+             */
+            averageSpeed: 2.8,
             maxJumpCount: 2
         }
 
