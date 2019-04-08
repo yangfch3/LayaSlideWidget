@@ -16,7 +16,10 @@ var GameMain = /** @class */ (function () {
                 txt: 'Slide Item 3'
             }
         ];
-        // 感知区域范围
+        // 调节组件的预设
+        NSlideWidget.SlideWidget.INNER_CONFIG.averageSpeed = 2.7;
+        NSlideWidget.SlideWidget.INNER_CONFIG.maxJumpCount = 3;
+        // 感知区域范围（用于下面的跟手回调逻辑）
         var perceptualArea = 80;
         var slide1 = new NSlideWidget.SlideWidget(data, SlideItem, {
             width: 600,

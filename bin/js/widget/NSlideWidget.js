@@ -280,8 +280,11 @@ var NSlideWidget;
             animateUpdateCb: null
         };
         SlideWidget.INNER_CONFIG = {
-            // px/ms
-            averageSpeed: 4,
+            /**
+             * 滑动单张的速度均值：像素/毫秒
+             * 单次滑动的张数 = Math.floor(v / averageSpeed)
+             */
+            averageSpeed: 2.8,
             maxJumpCount: 2
         };
         return SlideWidget;
