@@ -5,7 +5,7 @@ namespace NSlideWidget {
     export interface ISlideItem extends Laya.Sprite {
         slideWidget: NSlideWidget.SlideWidget
 
-        setData(data: any, args?: any): void;
+        setData(data: any, index: number, args?: any): void;
 
         onClick(): void;
     }

@@ -83,23 +83,23 @@ var NSlideWidget;
             var self = this;
             this.data.forEach(function (data, index) {
                 var slideItem = new _this.slideItemContr(self);
-                slideItem.setData(self.data[index], self.args);
+                slideItem.setData(self.data[index], index, self.args);
                 slideItem.size(self.options.width, self.options.height);
                 slideItem.pos(index * self.options.width + index * self.options.gap, 0);
                 _this.slideContainer.addChild(slideItem);
             });
         };
         SlideWidget.prototype.bindEvents = function () {
-            this.on(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
-            this.on(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
-            this.on(Laya.Event.MOUSE_UP, this, this.onMouseUp);
-            this.on(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
+            this.slideContainer.on(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
+            this.slideContainer.on(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
+            this.slideContainer.on(Laya.Event.MOUSE_UP, this, this.onMouseUp);
+            this.slideContainer.on(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
         };
         SlideWidget.prototype.unbindEvents = function () {
-            this.off(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
-            this.off(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
-            this.off(Laya.Event.MOUSE_UP, this, this.onMouseUp);
-            this.off(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
+            this.slideContainer.off(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
+            this.slideContainer.off(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
+            this.slideContainer.off(Laya.Event.MOUSE_UP, this, this.onMouseUp);
+            this.slideContainer.off(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
         };
         SlideWidget.prototype.onMouseDown = function (e) {
             if (this.isAnimating) {
@@ -168,7 +168,7 @@ var NSlideWidget;
                     this.springBack();
                 }
                 else {
-                    var speedMutli = Math.ceil((Math.abs(diffX) / distTime) / SlideWidget.INNER_CONFIG.averageSpeed);
+                    var speedMutli = Math.ceil((Math.abs(diffX) / distTime) / this.options.averageSpeed);
                     /**
                      * 以下情况不允许跳跃：
                      * 1. 不允许跳跃
@@ -215,8 +215,8 @@ var NSlideWidget;
             var leftRemainingCount = this.curIndex;
             var rightRemainingCount = this.total - 1 - this.curIndex;
             // 根据允许的最大跳跃数调整跳跃值
-            if (Math.abs(jumpCount) > SlideWidget.INNER_CONFIG.maxJumpCount) {
-                jumpCount = (jumpCount / Math.abs(jumpCount)) * SlideWidget.INNER_CONFIG.maxJumpCount;
+            if (Math.abs(jumpCount) > this.options.maxJumpCount) {
+                jumpCount = (jumpCount / Math.abs(jumpCount)) * this.options.maxJumpCount;
             }
             if (jumpCount < 0) {
                 Math.abs(jumpCount) < leftRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(0);
@@ -224,6 +224,22 @@ var NSlideWidget;
             else {
                 jumpCount < rightRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(this.total - 1);
             }
+        };
+        /**
+         * @param index 传入数据的单元索引
+         */
+        SlideWidget.prototype.jumpToIndex = function (dataIndex) {
+            if (dataIndex < 0 || dataIndex > this.total - 1) {
+                return;
+            }
+            var itemIndex = Math.round(dataIndex);
+            if (this.options.loop) {
+                itemIndex += 1;
+            }
+            if (itemIndex === this.curIndex) {
+                return;
+            }
+            this.doMove(itemIndex);
         };
         SlideWidget.prototype.doMove = function (toIndex) {
             var animateTime = Math.abs(toIndex - this.curIndex) * this.options.pageTurnTime;
@@ -251,6 +267,7 @@ var NSlideWidget;
                         _this.slideContainer.x = -(_this.curIndex * _this.options.width + _this.curIndex * _this.options.gap);
                     }
                 }
+                _this.options.ensureSelectCb && _this.options.ensureSelectCb(_this, _this.curIndex);
             }));
             this.options.animateUpdateCb && (this.tween.update = new Laya.Handler(this, function () {
                 this.options.animateUpdateCb(this, this.slideContainer.x);
@@ -269,7 +286,9 @@ var NSlideWidget;
             width: 750,
             height: 1334,
             loop: false,
+            averageSpeed: 2.8,
             enableJump: false,
+            maxJumpCount: 2,
             x: 0,
             y: 0,
             gap: 0,
@@ -277,15 +296,8 @@ var NSlideWidget;
             swipeThreshold: 0.3,
             clickCb: null,
             followCb: null,
-            animateUpdateCb: null
-        };
-        SlideWidget.INNER_CONFIG = {
-            /**
-             * 滑动单张的速度均值：像素/毫秒
-             * 单次滑动的张数 = Math.floor(v / averageSpeed)
-             */
-            averageSpeed: 2.8,
-            maxJumpCount: 2
+            animateUpdateCb: null,
+            ensureSelectCb: null
         };
         return SlideWidget;
     }(Laya.Sprite));

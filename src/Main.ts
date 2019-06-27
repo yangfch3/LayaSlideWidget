@@ -20,10 +20,6 @@ class GameMain {
             }
         ];
 
-        // 调节组件的预设
-        NSlideWidget.SlideWidget.INNER_CONFIG.averageSpeed = 2.7
-        NSlideWidget.SlideWidget.INNER_CONFIG.maxJumpCount = 3
-
         // 感知区域范围（用于下面的跟手回调逻辑）
         let perceptualArea = 80;
         let slide1: NSlideWidget.SlideWidget = new NSlideWidget.SlideWidget(data, SlideItem, {

@@ -4,8 +4,11 @@ namespace NSlideWidget {
         width?: number
         height?: number
 
+        averageSpeed?:  number
+
         loop?: boolean
         enableJump?: boolean
+        maxJumpCount?: number
 
         x?: number
         y?: number
@@ -19,6 +22,7 @@ namespace NSlideWidget {
         clickCb?: (context: SlideWidget, index: number) => void
         followCb?: (context: SlideWidget, x: number) => void
         animateUpdateCb?: (context: SlideWidget, x: number) => void
+        ensureSelectCb?: (context: SlideWidget, index: number) => void
     }
 
     export class SlideWidget extends Laya.Sprite {
@@ -27,24 +31,18 @@ namespace NSlideWidget {
             width: 750,
             height: 1334,
             loop: false,
+            averageSpeed: 2.8,
             enableJump: false,
+            maxJumpCount: 2,
             x: 0,
             y: 0,
             gap: 0,
             pageTurnTime: 300,
-            swipeThreshold: 0.3, // 滑动距离超过 SlideItem 的 30% 才会触发切换
+            swipeThreshold: 0.3,
             clickCb: null,
             followCb: null,
-            animateUpdateCb: null
-        }
-
-        public static INNER_CONFIG = {
-            /**
-             * 滑动单张的速度均值：像素/毫秒
-             * 单次滑动的张数 = Math.floor(v / averageSpeed)
-             */
-            averageSpeed: 2.8,
-            maxJumpCount: 2
+            animateUpdateCb: null,
+            ensureSelectCb: null
         }
 
         private options: SlideOptions;
@@ -122,7 +120,7 @@ namespace NSlideWidget {
             let self = this
             this.data.forEach((data, index) => {
                 let slideItem = new this.slideItemContr(self);
-                slideItem.setData(self.data[index], self.args)
+                slideItem.setData(self.data[index], index, self.args)
                 slideItem.size(self.options.width, self.options.height);
                 slideItem.pos(index * self.options.width + index * self.options.gap, 0);
                 this.slideContainer.addChild(slideItem);
@@ -130,17 +128,17 @@ namespace NSlideWidget {
         }
 
         private bindEvents() {
-            this.on(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
-            this.on(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
-            this.on(Laya.Event.MOUSE_UP, this, this.onMouseUp);
-            this.on(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
+            this.slideContainer.on(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
+            this.slideContainer.on(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
+            this.slideContainer.on(Laya.Event.MOUSE_UP, this, this.onMouseUp);
+            this.slideContainer.on(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
         }
 
         private unbindEvents() {
-            this.off(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
-            this.off(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
-            this.off(Laya.Event.MOUSE_UP, this, this.onMouseUp);
-            this.off(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
+            this.slideContainer.off(Laya.Event.MOUSE_DOWN, this, this.onMouseDown);
+            this.slideContainer.off(Laya.Event.MOUSE_MOVE, this, this.onMouseMove);
+            this.slideContainer.off(Laya.Event.MOUSE_UP, this, this.onMouseUp);
+            this.slideContainer.off(Laya.Event.MOUSE_OUT, this, this.onMouseUp);
         }
 
         private onMouseDown(e: Laya.Event) {
@@ -215,7 +213,7 @@ namespace NSlideWidget {
                         (this.curIndex === this.total - 1 && diffX < 0))) {
                     this.springBack();
                 } else {
-                    const speedMutli = Math.ceil((Math.abs(diffX) / distTime) / SlideWidget.INNER_CONFIG.averageSpeed);
+                    const speedMutli = Math.ceil((Math.abs(diffX) / distTime) / this.options.averageSpeed);
                     /**
                      * 以下情况不允许跳跃：
                      * 1. 不允许跳跃
@@ -267,14 +265,31 @@ namespace NSlideWidget {
             const leftRemainingCount = this.curIndex;
             const rightRemainingCount = this.total - 1 - this.curIndex;
             // 根据允许的最大跳跃数调整跳跃值
-            if (Math.abs(jumpCount) > SlideWidget.INNER_CONFIG.maxJumpCount) {
-                jumpCount = (jumpCount / Math.abs(jumpCount)) * SlideWidget.INNER_CONFIG.maxJumpCount
+            if (Math.abs(jumpCount) > this.options.maxJumpCount) {
+                jumpCount = (jumpCount / Math.abs(jumpCount)) * this.options.maxJumpCount
             }
             if (jumpCount < 0) {
                 Math.abs(jumpCount) < leftRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(0);
             } else {
                 jumpCount < rightRemainingCount ? this.doMove(this.curIndex + jumpCount) : this.doMove(this.total - 1);
             }
+        }
+
+        /**
+         * @param index 传入数据的单元索引
+         */
+        jumpToIndex(dataIndex: number) {
+            if (dataIndex < 0 || dataIndex > this.total - 1) {
+                return
+            }
+            let itemIndex = Math.round(dataIndex)
+            if (this.options.loop) {
+                itemIndex += 1
+            }
+            if (itemIndex === this.curIndex) {
+                return
+            }
+            this.doMove(itemIndex)
         }
 
         private doMove(toIndex: number) {
@@ -301,13 +316,14 @@ namespace NSlideWidget {
                         this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap);
                     }
                 }
+                this.options.ensureSelectCb && this.options.ensureSelectCb(this, this.curIndex);
             }));
             this.options.animateUpdateCb && (this.tween.update = new Laya.Handler(this, function(this: SlideWidget) {
                 this.options.animateUpdateCb(this, this.slideContainer.x);
             }));
         }
 
-        getSlideItemByIndex(index): ISlideItem {
+        getSlideItemByIndex(index: number): ISlideItem {
             return this.slideContainer.getChildAt(index) as ISlideItem
         }
 
