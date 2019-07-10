@@ -198,7 +198,11 @@ namespace NSlideWidget {
             if (!this.isTouchMove) {
                 this.slideContainer.x = -(this.curIndex * this.options.width + this.curIndex * this.options.gap);
                 if (this.options.clickCb) {
-                    this.options.clickCb(this, this.curIndex);
+                    let localX = e.target.globalToLocal(new Laya.Point(e.stageX, e.stageY)).x
+                    let clickIndex = Math.floor(localX / (this.options.width + this.options.gap))
+                    if (localX % (this.options.width + this.options.gap) <= this.options.width) {
+                        this.options.clickCb(this, clickIndex)
+                    }
                 }
                 return
             }
@@ -278,7 +282,7 @@ namespace NSlideWidget {
         /**
          * @param index 传入数据的单元索引
          */
-        jumpToIndex(dataIndex: number) {
+        jumpToIndex(dataIndex: number, withoutAni?: boolean) {
             if (dataIndex < 0 || dataIndex > this.total - 1) {
                 return
             }
@@ -289,7 +293,13 @@ namespace NSlideWidget {
             if (itemIndex === this.curIndex) {
                 return
             }
-            this.doMove(itemIndex)
+            if (withoutAni) {
+                this.curIndex = itemIndex;
+                const dist = this.curIndex * this.options.width + this.curIndex * this.options.gap;
+                this.slideContainer.x = -dist
+            } else {
+                this.doMove(itemIndex)
+            }
         }
 
         private doMove(toIndex: number) {
